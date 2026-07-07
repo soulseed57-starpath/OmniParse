@@ -7,8 +7,8 @@
 import re
 import json
 import requests
-from config import XIANYU_API_URL
-from browser import fetch_page, extract_meta_info
+from config import XIANYU_API_URL, COOKIES
+from browser import fetch_page, extract_meta_info, cookie_str_to_dict
 
 UA = "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36"
 TIMEOUT = 15
@@ -85,7 +85,8 @@ def parse_taobao_item(item_id):
 
     # Browser fallback: use Playwright for JS-rendered pages
     try:
-        result_browser = fetch_page(f"https://item.taobao.com/item.htm?id={item_id}", wait_seconds=5)
+        tb_cookies = cookie_str_to_dict(COOKIES.get("taobao", ""))
+        result_browser = fetch_page(f"https://item.taobao.com/item.htm?id={item_id}", cookies=tb_cookies, wait_seconds=5)
         if "error" not in result_browser:
             meta = extract_meta_info(result_browser.get("html", ""))
             if meta.get("title") and meta["title"] != "商品详情页":
@@ -144,7 +145,8 @@ def parse_xianyu_item(item_id):
 
     # Browser fallback: use Playwright for JS-rendered pages
     try:
-        result_browser = fetch_page(f"https://www.goofish.com/item/{item_id}", wait_seconds=5)
+        xy_cookies = cookie_str_to_dict(COOKIES.get("xianyu", ""))
+        result_browser = fetch_page(f"https://www.goofish.com/item/{item_id}", cookies=xy_cookies, wait_seconds=5)
         if "error" not in result_browser:
             meta = extract_meta_info(result_browser.get("html", ""))
             if meta.get("title"): result["title"] = meta["title"]

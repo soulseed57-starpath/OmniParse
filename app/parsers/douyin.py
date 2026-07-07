@@ -4,7 +4,8 @@
 
 import re
 import requests
-from config import PARSER_API_URL
+from config import PARSER_API_URL, COOKIES
+from browser import fetch_page, cookie_str_to_dict
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 TIMEOUT = 30
@@ -53,6 +54,16 @@ def parse_douyin_video(url):
     author = detail.get("author", {})
     stats = detail.get("statistics", {})
     video = detail.get("video", {})
+
+    # 如果有 douyin cookie，尝试用浏览器获取更完整数据
+    if COOKIES.get("douyin"):
+        try:
+            browser_result = fetch_page(url, cookies=cookie_str_to_dict(COOKIES["douyin"]), wait_seconds=3)
+            if "error" not in browser_result:
+                result["browser_enhanced"] = True
+                result["browser_title"] = browser_result.get("title", "")
+        except:
+            pass
 
     return {
         "title": detail.get("desc", ""),

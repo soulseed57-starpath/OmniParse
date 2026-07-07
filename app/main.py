@@ -111,7 +111,13 @@ def parse_url(url: str = Query(...), verbose: bool = False):
             return ParseResult(success=False, error="不支持的解析类型")
 
         if "error" in data:
-            return ParseResult(success=False, platform=platform, type=content_type, error=data["error"])
+            # 检查是否需要 cookies
+            err_msg = data["error"]
+            if platform in ["taobao", "xianyu", "douyin"]:
+                from config import COOKIES
+                if not COOKIES.get(platform):
+                    err_msg += f" | 💡 此平台需要登录才能完整解析，可在 config.yaml 配置 {platform} 的 cookies"
+            return ParseResult(success=False, platform=platform, type=content_type, error=err_msg)
         if not verbose:
             for key in ["raw_data", "raw_text", "images"]:
                 data.pop(key, None)
